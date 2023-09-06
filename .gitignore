@@ -24,3 +24,6 @@ text_site-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# dets
+counter_table
