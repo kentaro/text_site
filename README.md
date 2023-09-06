@@ -1,21 +1,30 @@
 # TextSite
 
-**TODO: Add description**
+Old and good text site.
 
-## Installation
+ref. https://twitter.com/dnobori/status/1698619977950212362
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `text_site` to your list of dependencies in `mix.exs`:
+## Usage
 
-```elixir
-def deps do
-  [
-    {:text_site, "~> 0.1.0"}
-  ]
-end
+Start a server:
+
+```
+iex -S mix
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/text_site>.
+Access to the server from another terminal:
 
+```
+nc localhost 23
+```
+
+https://github.com/kentaro/text_site/assets/3458/20acff63-4fb2-4a7e-a036-1668178855fa
+
+## TODO
+
+- To fit width according to letters
+- Stateful counter
+
+## Author
+
+Kentaro Kuribayashi <kentarok@gmail.com>
