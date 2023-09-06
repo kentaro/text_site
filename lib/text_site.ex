@@ -70,6 +70,12 @@ defmodule TextSite do
   end
 
   @impl ThousandIsland.Handler
+  def handle_close(socket, state) do
+    socket |> unregister_client()
+    {:continue, state}
+  end
+
+  @impl ThousandIsland.Handler
   def handle_error(reason, socket, state) do
     Logger.info(inspect(reason))
     socket |> unregister_client()
