@@ -8,6 +8,7 @@ defmodule TextSite.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {TextSite.Counter, 1},
       {ThousandIsland, port: 23, handler_module: TextSite}
     ]
 

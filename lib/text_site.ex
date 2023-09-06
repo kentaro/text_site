@@ -59,6 +59,7 @@ defmodule TextSite do
 
   defp make_header() do
     {:ok, stat} = File.stat(__ENV__.file)
+
     last_modified =
       stat.mtime
       |> NaiveDateTime.from_erl!()
@@ -68,7 +69,7 @@ defmodule TextSite do
     EEx.eval_string(
       @header,
       last_modified: last_modified,
-      counter: 1
+      counter: GenServer.call(TextSite.Counter, :counter)
     )
   end
 
