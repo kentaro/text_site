@@ -9,6 +9,7 @@ defmodule TextSite.Application do
   def start(_type, _args) do
     children = [
       {TextSite.Counter, 1},
+      {Registry, keys: :duplicate, name: TextSite.Registry},
       {ThousandIsland, port: 23, handler_module: TextSite}
     ]
 

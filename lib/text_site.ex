@@ -1,4 +1,5 @@
 defmodule TextSite do
+  require Logger
   use ThousandIsland.Handler
 
   @line_width 30
@@ -31,12 +32,17 @@ defmodule TextSite do
   趣味は読書。歴史、アート、思想等の人文系諸ジャンルや社会科学、情報科学等のサイエンスの諸ジャンルを中心に、書籍を毎年約200冊近く読んでいる（読書記録）。その他、無線（アマチュア無線、ライセンスフリー無線）、アート鑑賞、現代作家のうつわ、江戸前鮨、シーシャ、歌舞伎、落語等を好む。趣味を発信するYouTuberとしても活動。
   """
 
+  @registry_key "clients"
+
   @impl ThousandIsland.Handler
   def handle_connection(socket, state) do
+    # register client
+    socket |> register_client()
+
     # banner
-    socket |> write_chunk(@banner)
+    socket |> send_chunk(@banner)
     # header
-    socket |> write_chunk(make_header())
+    socket |> send_chunk(make_header())
 
     # content
     @content
@@ -47,14 +53,55 @@ defmodule TextSite do
       |> Enum.chunk_every(@line_width)
       |> Enum.each(fn chunk ->
         socket
-        |> write_chunk(chunk)
+        |> send_chunk(chunk)
       end)
 
       socket
-      |> write_char("\n")
+      |> send_data("\n")
     end)
 
-    {:close, state}
+    {:continue, state}
+  end
+
+  @impl ThousandIsland.Handler
+  def handle_data(data, socket, state) do
+    broadcast(self(), socket, data)
+    {:continue, state}
+  end
+
+  @impl ThousandIsland.Handler
+  def handle_error(reason, socket, state) do
+    Logger.info(inspect(reason))
+    socket |> unregister_client()
+    {:continue, state}
+  end
+
+  @impl ThousandIsland.Handler
+  def handle_shutdown(socket, state) do
+    socket |> unregister_client()
+    {:continue, state}
+  end
+
+  @impl GenServer
+  def handle_cast({:broadcast, from, data}, state) do
+    TextSite.Registry
+    |> Registry.lookup(@registry_key)
+    |> Enum.filter(fn {_pid, socket} ->
+      socket != from
+    end)
+    |> Enum.each(fn {_pid, socket} ->
+      socket |> send_data(format_data(data))
+    end)
+
+    {:noreply, state}
+  end
+
+  defp broadcast(pid, from, data) do
+    GenServer.cast(pid, {:broadcast, from, data})
+  end
+
+  defp format_data(data) do
+    "\n\n>> #{String.trim(data)} <<\n\n"
   end
 
   defp make_header() do
@@ -73,26 +120,38 @@ defmodule TextSite do
     )
   end
 
-  defp write_chunk(socket, chunk) when is_binary(chunk) do
-    socket
-    |> write_chunk(chunk |> String.graphemes())
+  defp register_client(socket) do
+    Logger.info("client registered: #{inspect(socket)}")
+    TextSite.Registry
+    |> Registry.register(@registry_key, socket)
   end
 
-  defp write_chunk(socket, chunk) do
+  defp unregister_client(socket) do
+    Logger.info("client unregistered: #{inspect(socket)}")
+    TextSite.Registry
+    |> Registry.unregister_match(@registry_key, socket)
+  end
+
+  defp send_chunk(socket, chunk) when is_binary(chunk) do
+    socket
+    |> send_chunk(chunk |> String.graphemes())
+  end
+
+  defp send_chunk(socket, chunk) do
     chunk
     |> Enum.each(fn char ->
       socket
-      |> write_char(char)
+      |> send_data(char)
 
       Process.sleep(10)
     end)
 
     socket
-    |> write_char("\n")
+    |> send_data("\n")
   end
 
-  defp write_char(socket, char) do
+  defp send_data(socket, data) do
     socket
-    |> ThousandIsland.Socket.send(char)
+    |> ThousandIsland.Socket.send(data)
   end
 end
