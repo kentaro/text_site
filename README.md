@@ -24,6 +24,7 @@ https://github.com/kentaro/text_site/assets/3458/20acff63-4fb2-4a7e-a036-1668178
 
 - To fit width according to letters
 - Stateful counter
+- Deploy the server
 
 ## Author
 
